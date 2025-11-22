@@ -3,10 +3,10 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     public float moveSpeed = 5f;
-    public float jumpForce = 12f;
-    private Rigidbody2D rb;
+    public float jumpForce = 10f;
 
-    private bool isGrounded = false;
+    private Rigidbody2D rb;
+    private bool isGrounded;
 
     void Start()
     {
@@ -15,18 +15,18 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        // --- Horizontal Move ---
+        // Move left / right
         float moveX = Input.GetAxisRaw("Horizontal");
         rb.linearVelocity = new Vector2(moveX * moveSpeed, rb.linearVelocity.y);
 
-        // --- Jump ---
+        // Jump when grounded
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
     }
 
-    // --- Ground Check ---
+    // Detect touching ground
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.collider.CompareTag("Ground"))
