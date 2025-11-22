@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-    public float walkSpeed = 5f;
+    public float moveSpeed = 5f;
     public float runSpeed = 8f;
     public float jumpForce = 12f;
 
@@ -18,36 +18,36 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        // Prevent rotation
-        transform.rotation = Quaternion.identity;
-
-        // Horizontal movement input
         float moveX = Input.GetAxisRaw("Horizontal");
-
-        // Running check
         bool isRunning = Input.GetKey(KeyCode.LeftShift);
 
-        // Choose speed
-        float speed = isRunning ? runSpeed : walkSpeed;
+        float speed = isRunning ? runSpeed : moveSpeed;
 
-        // Apply movement
-        rb.velocity = new Vector2(moveX * speed, rb.velocity.y);
+        rb.linearVelocity = new Vector2(moveX * speed, rb.linearVelocity.y);
 
-        // Jump
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
 
-        // 🎯 SEND ANIMATION VALUES
-        // Speed = abs(moveX) (NOT multiplied by walkSpeed!)
-        animator.SetFloat("Speed", Mathf.Abs(moveX));
+        // Keep character facing right (no horizontal flipping)
+        transform.localScale = new Vector3(1, 1, 1);
 
-        // isBack = true when moving left
+        // Rotate character to face backward when moving left (A key)
+        if (moveX < 0)
+        {
+            transform.rotation = Quaternion.Euler(0, 0, 180); // Rotate 180 degrees to face backward
+        }
+        else if (moveX > 0)
+        {
+            transform.rotation = Quaternion.identity; // Face forward
+        }
+
+        // Animation Controller
+        animator.SetFloat("Speed", Mathf.Abs(moveX * speed));
         animator.SetBool("isBack", moveX < 0);
     }
 
-    // Ground detection
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.collider.CompareTag("Ground"))
