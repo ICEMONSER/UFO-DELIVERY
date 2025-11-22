@@ -15,6 +15,7 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
+        transform.rotation = Quaternion.identity;
         // Move left / right
         float moveX = Input.GetAxisRaw("Horizontal");
         rb.linearVelocity = new Vector2(moveX * moveSpeed, rb.linearVelocity.y);
