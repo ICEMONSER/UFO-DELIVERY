@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: d1c32f020900445abad0aa002ad02b7a
+guid: e407b391971e24f64a5d56c51d6c2b22
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8762363308211935106
-    second: Screenshot_2568-11-22_at_13.44.19-removebg-preview_0
+      213: -8943259995844856450
+    second: Idel3_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Screenshot_2568-11-22_at_13.44.19-removebg-preview_0
+      name: Idel3_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 522
-        height: 478
+        x: 296
+        y: 104
+        width: 443
+        height: 794
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 28793eaf00b2a9970800000000000000
-      internalID: 8762363308211935106
+      spriteID: e75b4bdca6823e380800000000000000
+      internalID: -8943259995844856450
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Screenshot_2568-11-22_at_13.44.19-removebg-preview_0: 8762363308211935106
+      Idel3_0: -8943259995844856450
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
