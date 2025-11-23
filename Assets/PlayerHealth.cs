@@ -19,6 +19,13 @@ public class PlayerHealth : MonoBehaviour
     public UnityEvent<int, int> OnHealthChanged; // current, max
     public UnityEvent OnDeath;
 
+    [Header("Audio Settings")]
+    [Tooltip("เสียงเมื่อได้รับดาเมจ")]
+    public AudioClip damageSound;
+    
+    [Tooltip("AudioSource สำหรับเล่นเสียง (ถ้าไม่ใส่จะหาในตัวนี้)")]
+    public AudioSource audioSource;
+
     private bool isDead = false;
     private Vector3 startPosition;
 
@@ -28,6 +35,17 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         startPosition = transform.position;
+        
+        // เตรียม AudioSource
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.playOnAwake = false;
+            }
+        }
         
         // แจ้งเตือน UI ครั้งแรก
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -65,6 +83,12 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
         Debug.Log($"Player took {amount} damage. Current Health: {currentHealth}/{maxHealth}");
+        
+        // เล่นเสียงเจ็บ
+        if (damageSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(damageSound);
+        }
         
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
