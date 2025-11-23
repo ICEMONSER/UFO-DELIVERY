@@ -162,7 +162,11 @@ public class DeliveryNPC : MonoBehaviour
                     GameObject player = GetPlayer();
                     if (player != null)
                     {
-                        float distance = Vector3.Distance(transform.position, player.transform.position);
+                        // คำนวณระยะห่างแบบ 2D (ไม่คิดแกน Z)
+                        float distance = Vector2.Distance(
+                            new Vector2(transform.position.x, transform.position.y), 
+                            new Vector2(player.transform.position.x, player.transform.position.y)
+                        );
                         Debug.Log($"{npcName}: ระยะห่างจากผู้เล่น (Raycast): {distance:F2}, ต้องอยู่ใกล้: {interactionDistance}");
                         
                         if (distance <= interactionDistance)
@@ -314,13 +318,17 @@ public class DeliveryNPC : MonoBehaviour
         // ตรวจสอบระยะห่าง (ถ้าเปิดใช้งาน)
         bool canDeliver = true;
         
-        if (checkDistance)
-        {
-            GameObject player = GetPlayer();
-            if (player != null)
-            {
-                float distance = Vector3.Distance(transform.position, player.transform.position);
-                Debug.Log($"{npcName}: ระยะห่างจากผู้เล่น: {distance:F2}, ต้องอยู่ใกล้: {interactionDistance}");
+                if (checkDistance)
+                {
+                    GameObject player = GetPlayer();
+                    if (player != null)
+                    {
+                        // คำนวณระยะห่างแบบ 2D (ไม่คิดแกน Z)
+                        float distance = Vector2.Distance(
+                            new Vector2(transform.position.x, transform.position.y), 
+                            new Vector2(player.transform.position.x, player.transform.position.y)
+                        );
+                        Debug.Log($"{npcName}: ระยะห่างจากผู้เล่น: {distance:F2}, ต้องอยู่ใกล้: {interactionDistance}");
                 
                 if (distance > interactionDistance)
                 {
@@ -542,6 +550,15 @@ public class DeliveryNPC : MonoBehaviour
                 playerRenderer.enabled = true;
             }
             
+            // ป้องกันการตายจากการตกเหวชั่วคราว
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.SetTeleporting(true);
+                // คืนค่าหลังจาก 1 วินาที (รอให้ทุกอย่างเข้าที่)
+                StartCoroutine(ResetTeleportingStatus(playerHealth, 1f));
+            }
+
             // Teleport ผู้เล่น
             player.transform.position = targetPosition;
 
@@ -570,15 +587,26 @@ public class DeliveryNPC : MonoBehaviour
             EnablePlayerMovement();
 
             // รีเซ็ต Inventory และ NPC สำหรับ Level ถัดไป
-            ResetInventory();
-            ResetNPC();
+            // Commented out to keep inventory across levels
+            // ResetInventory();
+            // ResetNPC();
             
             // รีเซ็ตกล่องทั้งหมดที่ถูกเก็บไปแล้ว (ให้กลับมาแสดงอีกครั้ง)
-            ResetAllCollectedBoxes();
+            // Commented out to prevent boxes from respawning
+            // ResetAllCollectedBoxes();
         }
         else
         {
             Debug.LogWarning($"{npcName}: Player not found! Cannot teleport.");
+        }
+    }
+
+    IEnumerator ResetTeleportingStatus(PlayerHealth playerHealth, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (playerHealth != null)
+        {
+            playerHealth.SetTeleporting(false);
         }
     }
 
@@ -645,19 +673,18 @@ public class DeliveryNPC : MonoBehaviour
                 }
             }
             
-            // เก็บ Y position เดิมของ Camera (ล็อก Y axis)
-            float originalY = mainCamera.transform.position.y;
+            // คำนวณ Y position ใหม่ตาม Player (เพื่อให้มุมมองเหมือนเดิม)
+            float newY = playerPos.y + cameraFollow.yOffset;
             
-            // ใช้ UpdateImmediatelyWithYCentered() เพื่ออัพเดท Camera position ทันที (ล็อก Y position และให้ Player อยู่ตรงกลาง)
-            cameraFollow.UpdateImmediatelyWithYCentered(originalY, mainCamera);
+            // ใช้ UpdateImmediatelyWithYCentered() เพื่ออัพเดท Camera position ทันที
+            cameraFollow.UpdateImmediatelyWithYCentered(newY, mainCamera);
             
             Vector3 newCameraPos = mainCamera.transform.position;
             if (showLevelCompleteMessage)
             {
                 Debug.Log($"Camera (CameraFollow) updated immediately (centered): {oldCameraPos} → {newCameraPos} (Player: {playerPos})");
-                Debug.Log($"Camera Y locked at: {originalY} (Player Y: {playerPos.y})");
+                Debug.Log($"Camera Y updated to: {newY} (Player Y: {playerPos.y}, Offset: {cameraFollow.yOffset})");
                 Debug.Log($"Player centered in camera view");
-                Debug.Log($"CameraFollow target: {(cameraFollow.target != null ? cameraFollow.target.name : "NULL")}");
             }
             return;
         }
@@ -668,9 +695,12 @@ public class DeliveryNPC : MonoBehaviour
         {
             // CameraController ใช้ private field player ดังนั้นเราต้องอัพเดท Camera position โดยตรง
             // อัพเดท Camera position ทันที (ไม่ใช่ค่อยๆ เคลื่อนที่)
+            // ใช้ playerPos.y + 0.5f เพื่อให้มุมมองใกล้เคียงกับ CameraFollow (ที่มี yOffset = 1f) แต่ต่ำลงมาหน่อย
+            float newY = playerPos.y + 0.5f;
+            
             Vector3 newCameraPos = new Vector3(
                 playerPos.x,
-                mainCamera.transform.position.y, // เก็บ Y position เดิม
+                newY, 
                 mainCamera.transform.position.z
             );
             mainCamera.transform.position = newCameraPos;
@@ -678,15 +708,17 @@ public class DeliveryNPC : MonoBehaviour
             if (showLevelCompleteMessage)
             {
                 Debug.Log($"Camera (CameraController) updated: {oldCameraPos} → {newCameraPos} (Player: {playerPos})");
+                Debug.Log($"Camera Y updated to: {newY} (Player Y: {playerPos.y})");
                 Debug.LogWarning($"Note: CameraController uses private player field. Make sure player reference is set in Inspector!");
             }
             return;
         }
 
         // ถ้าไม่มี Camera script → อัพเดท Camera position โดยตรง
+        // ใช้ playerPos.y + 0.5f เพื่อให้มุมมองใกล้เคียงกับ CameraFollow
         Vector3 newCameraPosDirect = new Vector3(
             playerPos.x,
-            playerPos.y,
+            playerPos.y + 0.5f,
             mainCamera.transform.position.z
         );
         mainCamera.transform.position = newCameraPosDirect;
@@ -790,6 +822,7 @@ public class DeliveryNPC : MonoBehaviour
     // ฟังก์ชันสำหรับรีเซ็ต Inventory
     public static void ResetInventory()
     {
+        Debug.Log($"ResetInventory called! Stack: {System.Environment.StackTrace}");
         collectedBoxIDs.Clear();
         collectedBoxNames.Clear();
     }

@@ -48,15 +48,23 @@ public class Movement : MonoBehaviour
         animator.SetBool("isBack", moveX < 0);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void FixedUpdate()
     {
-        if (collision.collider.CompareTag("Ground"))
-            isGrounded = true;
+        // รีเซ็ตสถานะพื้นทุกเฟรม (จะถูก set เป็น true ใน OnCollisionStay2D ถ้ายังเหยียบพื้นอยู่)
+        isGrounded = false;
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    private void OnCollisionStay2D(Collision2D collision)
     {
-        if (collision.collider.CompareTag("Ground"))
-            isGrounded = false;
+        // ตรวจสอบว่าจุดที่ชนอยู่ด้านล่างหรือไม่ (เหยียบอยู่บนสิ่งของ)
+        foreach (ContactPoint2D contact in collision.contacts)
+        {
+            // ถ้า Normal ชี้ขึ้น (y > 0.7) แสดงว่าเป็นพื้น
+            if (contact.normal.y > 0.7f)
+            {
+                isGrounded = true;
+                return; // เจอพื้นแล้ว จบการทำงาน
+            }
+        }
     }
 }
